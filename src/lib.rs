@@ -86,10 +86,30 @@ impl Contract {
             amount: total_supply,
             memo: Some("new tokens are minted"),
         }
-        .emit();
+            .emit();
 
         this
     }
+
+    #[private]
+    pub fn mint(&mut self, amount: U128) {
+        require!(env::state_exists(), "Not initialized");
+
+        if !self.token.accounts.contains_key(&env::signer_account_id()) {
+            self.token.internal_register_account(&env::signer_account_id());
+        }
+
+        self.token.internal_deposit(&env::signer_account_id(), amount.into());
+
+        near_contract_standards::fungible_token::events::FtMint {
+            owner_id: &env::signer_account_id(),
+            amount: amount.into(),
+            memo: Some("new tokens are minted"),
+        }
+            .emit();
+
+    }
+
 }
 
 #[near]
